@@ -1,0 +1,110 @@
+---
+title: "CARPS Reproducibility Report"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+#### Article ID: [CARPS_4-1-2015_PS]
+#### Pilot 1: [Sean Zion]
+#### Co-pilot: [Mufan Luo]
+#### Start date: [11/5/2017]
+#### End date: [11/6/2017]   
+
+-------
+
+#### Methods summary: 
+[Write a brief summary of the methods underlying the target outcomes written in your own words]
+
+------
+
+#### Target outcomes: 
+[Insert the target outcomes identified in targetOutcomes.md]  
+
+------
+
+[The chunk below sets up some formatting options for the R Markdown document]
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Step 1: Load packages
+
+[Some useful packages are being loaded below. You can add any additional ones you might need too.]
+
+```{r}
+library(tidyverse) # for data munging
+library(knitr) # for kable table formating
+library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
+library(readxl) # import excel files
+library(CARPSreports) # custom report functions
+library(ggplot2)
+library(psych)
+library(plyr)
+library(corrplot)
+```
+
+## Step 2: Load data
+
+```{r}
+faces <- read.csv("/Users/seanzion/Documents/GitHub/CARPS_4-1-2015_PS/data/Experiment _1_Rps _v2.csv")
+```
+
+## Step 3: Tidy data
+
+```{r}
+```
+
+## Step 4: Run analysis
+
+### Pre-processing
+
+[you can remove this section if no pre-processing is required]
+
+```{r}
+```
+
+### Descriptive statistics
+
+```{r}
+```
+
+### Inferential statistics
+
+```{r}
+```
+
+## Step 5: Conclusion
+
+[Include the carpsReport function below]
+
+```{r}
+# You can delete this commented text for your report, it is here to serve as a guide.
+# Use the carpsReport() function in this code chunk.
+# Here is a guide to the arguments you should include in the function:
+# Report_Type: Enter 'pilot' or 'final'
+# Article_ID: Enter the article's unique ID code
+# Insufficient_Information_Errors: Enter the number of Insufficient Information Errors
+# Decision_Errors Enter: the number of decision errors
+# Major_Numerical_Errors: Enter the number of major numerical errors
+# Time_to_Complete: Enter the estimated time to complete the report in minutes
+# Author_Assistance: Enter whether author assistance was required (TRUE/FALSE)
+# FOR EXAMPLE:
+# carpsReport(Report_Type = "pilot", 
+#             Article_ID = "ABhgyo", 
+#             Insufficient_Information_Errors = 0, 
+#             Decision_Errors = 1, 
+#             Major_Numerical_Errors = 4, 
+#             Time_to_Complete = 120, 
+#             Author_Assistance = TRUE)
+```
+
+[Please also include a brief text summary describing your findings. If this reproducibility check was a failure, you should note any suggestions as to what you think the likely cause(s) might be.]
+
+[This function will output information about the package versions used in this report:]
+
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
