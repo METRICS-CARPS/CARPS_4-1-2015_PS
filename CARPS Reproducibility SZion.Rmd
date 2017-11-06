@@ -6,32 +6,38 @@ output:
     toc_float: true
 ---
 
-#### Article ID: [CARPS_4-1-2015_PS]
-#### Pilot 1: [Sean Zion]
-#### Co-pilot: [Mufan Luo]
-#### Start date: [11/5/2017]
-#### End date: [11/6/2017]   
+#### Article ID: CARPS_4-1-2015_PS
+#### Pilot 1: Sean Zion
+#### Co-pilot: Mufan Luo
+#### Start date: 11/5/2017
+#### End date: 11/6/2017
 
 -------
 
 #### Methods summary: 
-[Write a brief summary of the methods underlying the target outcomes written in your own words]
+
+The authors conducted a repeated measures ANOVA using DFT as a repeated measure and judgement type as between-subjects factor. They report a significant main effect of DFT and a signficant interaction effect of DFT with judgment type. The plot mean judgement for attractiveness and mean judgement for trustworthiness across the ten faces in figure 2.
 
 ------
 
 #### Target outcomes: 
-[Insert the target outcomes identified in targetOutcomes.md]  
+> We complemented our by-face analysis with a by-participant
+repeated measures analysis of variance
+(ANOVA) with DFT as a repeated measure and judgment
+type (trustworthiness vs. attractiveness) as a between-subjects
+factor. The observed effects supported the same
+conclusions as the by-face analysis. The main effect of
+DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52.
+More important, this main effect was qualified by a significant
+interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 
 ------
-
-
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
 ```
 
 ## Step 1: Load packages
-
 
 ```{r}
 library(tidyverse) # for data munging
@@ -44,7 +50,7 @@ library(psych)
 library(plyr)
 library(corrplot)
 library(car)
-library(ez)
+library(ez) #For ANOVA Models
 ```
 
 ## Step 2: Load data
@@ -132,6 +138,8 @@ We are really interested in the mean(SD) judgement for attractiveness and trustw
 
 ### Inferential statistics
 
+### Model 1:
+
 ```{r, model 1}
 
 #Model 1 - Repeated Measures ANOVA 
@@ -148,6 +156,9 @@ The main effect of DFT was significant, F(10, 46) = 10.50, p < .001. There was a
 
 ηp2 could not be caluculated with this model, but we will check this output and calculate ηp2 below. 
 
+
+### Model 2: 
+
 ```{r, mod 2}
 #Model 2 - Repeated Measures ANOVA
 tidyfaces$trust_attract <- as.factor(tidyfaces$trust_attract)
@@ -163,6 +174,7 @@ Because we found differnt outcomes above and we could not obtain all the values 
 
 The main effect of DFT was significant, F(10, 46) = 10.49, p < .001, ηp2 = 0.082. There was also a significant interaction between DFT and Judgement Type  interaction, F(10, 460) = 43.75, p < .001, ηp2 = 0.27.
 
+### Figure 2 Replication:
 
 ```{r, Fig 2 Rep}
 #Figure 2 Replication
@@ -176,6 +188,9 @@ position = pd)  +  xlab('DFT Value') + ylab('Mean Judgment') + ylim(0, 10) + sca
 ```
 
 Figure 2: Mean trustworthiness and attractiveness judgments as a function of DFT. Error bars represent within-subjects standard errors.
+
+
+### Errors:
 
 ```{r}
 
