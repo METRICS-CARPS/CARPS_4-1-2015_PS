@@ -55,6 +55,25 @@ faces <- read.csv("/Users/seanzion/Documents/GitHub/CARPS_4-1-2015_PS/data/Exper
 ## Step 3: Tidy data
 
 ```{r}
+faces$id <- c(1:48)
+
+tidyfaces <- faces %>%
+  gather(key="DFT_Rating", value, 3:35) %>%
+  separate(DFT_Rating, c("dft", "value_trial"), sep="T_") %>%
+  subset(select = -dft) %>%
+  separate(value_trial, c("dft_value", "trial_num"), sep="_") %>% 
+  spread(trial_num, value)
+
+colnames(tidyfaces) <- c("age", "trust_attract", "id", "dft_value", "trial_1", "trial_2", "trial_3")
+
+
+  
+
+
+d.tidy <- d %>%
+  gather(type, value, 3:6) %>%
+  separate(type,c("type", "classroom"), sep="_") %>%
+  spread(type, value)
 ```
 
 ## Step 4: Run analysis
