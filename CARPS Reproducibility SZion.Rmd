@@ -44,6 +44,7 @@ library(ggplot2)
 library(psych)
 library(plyr)
 library(corrplot)
+library(car)
 ```
 
 ## Step 2: Load data
@@ -55,7 +56,7 @@ faces <- read.csv("/Users/seanzion/Documents/GitHub/CARPS_4-1-2015_PS/data/Exper
 ## Step 3: Tidy data
 
 ```{r}
-faces$id <- c(1:48)
+faces$id <- c(1:48) #adding a new column for subject ID
 
 tidyfaces <- faces %>%
   gather(key="DFT_Rating", value, 3:35) %>%
@@ -64,35 +65,96 @@ tidyfaces <- faces %>%
   separate(value_trial, c("dft_value", "trial_num"), sep="_") %>% 
   spread(trial_num, value)
 
-colnames(tidyfaces) <- c("age", "trust_attract", "id", "dft_value", "trial_1", "trial_2", "trial_3")
-
-
-  
-
-
-d.tidy <- d %>%
-  gather(type, value, 3:6) %>%
-  separate(type,c("type", "classroom"), sep="_") %>%
-  spread(type, value)
 ```
 
 ## Step 4: Run analysis
 
 ### Pre-processing
 
-[you can remove this section if no pre-processing is required]
 
 ```{r}
+colnames(tidyfaces) <- c("age", "trust_attract", "id", "dft_value", "trial_1", "trial_2", "trial_3") #renaming the columns 
+
+avg_value <-rowMeans(tidyfaces[,5:7]) #Calculating the avg value for each participant across the three tirals
+tidyfaces$avg_value <- avg_value #adding this column into the dataframe
+
+tidyfaces$dft_value <- as.numeric(tidyfaces$dft_value)
+tidyfaces$trust_attract <- as.factor(tidyfaces$trust_attract)
 ```
 
 ### Descriptive statistics
 
 ```{r}
+#Mean and SD for ratings across judement type (trustworthy / attractiveness):
+
+tidyfaces %>%
+  filter(trust_attract==1) %>%
+  summarise(mean = mean(avg_value), 
+            sd = sd(avg_value))
+
+tidyfaces %>%
+  filter(trust_attract==0) %>%
+  summarise(mean = mean(avg_value), 
+            sd = sd(avg_value))
+
+attract_mean = c()
+attract_sd = c()
+trust_mean = c()
+trust_sd = c()
+
+for (i in 0:10){
+  a = tidyfaces %>%
+  filter(trust_attract==0 & dft_value == 10*i) %>%
+  summarise(mean = mean(avg_value), 
+            sd = sd(avg_value))
+  attract_mean = c(attract_mean, a$mean)
+  attract_sd = c(attract_sd, a$sd)
+
+  
+  t = tidyfaces %>%
+  filter(trust_attract==1 & dft_value == 10*i) %>%
+  summarise(mean = mean(avg_value), 
+            sd = sd(avg_value))
+  trust_mean = c(trust_mean, t$mean)
+  trust_sd = c(trust_sd, t$sd)
+}
+
+df = data.frame("dft_value"=seq(0,100,10))
+df = mutate(df, "trust_mean" = trust_mean
+            , "trust_sd" = trust_sd
+            , "attract_mean" = attract_mean
+            , "attract_sd" = attract_sd)
+
 ```
 
 ### Inferential statistics
 
 ```{r}
+
+#Model 1 - Repeated Measures ANOVA 
+tidyfaces$trust_attract = as.factor(tidyfaces$trust_attract)
+tidyfaces$dft_value = as.factor(tidyfaces$dft_value)
+tidyfaces$id = as.factor(tidyfaces$id)
+model1 <- with(tidyfaces, aov(avg_value ~ dft_value * trust_attract + Error(id / dft_value)))
+summary(model1)
+
+library(ez)
+
+#Model 2 - Repeated Measures ANOVA
+tidyfaces$trust_attract <- as.factor(tidyfaces$trust_attract)
+tidyfaces$dft_value <- as.factor(tidyfaces$dft_value)
+tidyfaces$id <- as.factor(tidyfaces$id)
+model2 <- ezANOVA(data = tidyfaces, dv = .(avg_value), wid = .(id), within = .(dft_value), between = .(trust_attract), detailed = TRUE, return_aov=T)
+
+model2$ANOVA
+
+pd <- position_dodge(0.1)
+ggplot() + 
+  geom_line(data = df, aes(x = dft_value, y = attract_mean), color = "green") + 
+    geom_errorbar(aes(x = df$dft_value, ymin = attract_mean - attract_sd/sqrt(528), ymax = attract_mean + attract_sd/sqrt(528)), width=.1, position = pd)  + geom_line(data = df, aes(x = dft_value, y = trust_mean), color = "blue") +
+  geom_errorbar(aes(x = df$dft_value, ymin = trust_mean - trust_sd/sqrt(528), ymax = trust_mean + trust_sd/sqrt(528)), width=.1,
+position = pd)  +  xlab('DFT Value') + ylab('Mean Judgment') + ylim(0, 10) + scale_x_continuous(breaks=seq(0,100,10))
+
 ```
 
 ## Step 5: Conclusion
