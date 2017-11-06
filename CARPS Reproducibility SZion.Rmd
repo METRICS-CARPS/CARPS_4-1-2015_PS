@@ -197,10 +197,8 @@ Figure 2: Mean trustworthiness and attractiveness judgments as a function of DFT
 #ANOVA Output - Main Effect of DFT
 compareValues(reportedValue = 4.05, obtainedValue = 10.50)
 
-
 #ANOVA Output - Interaction Effect of DFT with Judgment Type
 compareValues(reportedValue = 5.95, obtainedValue = 43.75)
-
 
 #ANOVA Output - F Test Degrees of Freedom 
 compareValues(reportedValue = 37, obtainedValue = 46)
