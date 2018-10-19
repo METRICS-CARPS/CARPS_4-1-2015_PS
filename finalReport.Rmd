@@ -99,8 +99,6 @@ faces_prepr <- faces_tidy %>%
          subid = factor(subid))
 ```
 
-No pre-procesing needed other than tidying above.
-
 ### Descriptive statistics
 
 ```{r}
@@ -121,8 +119,8 @@ print(desc_stat)
 
 ```{r, model 1}
 #Model 1 - Repeated Measures ANOVA 
-model1 <- with(faces_prepr, aov(avg_value ~ dft_value * trust_attract + Error(subid / dft_value)))
-summary(model1)
+model1 <- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(subid / (dft_value))))
+print(summary(model1))
 ```
 
 Our goal was to reproduce the analysis of the authors in experiemnt one. we conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.
@@ -150,26 +148,25 @@ The main effect of DFT was significant, F(10, 46) = 10.49, p < .001, ηp2 = 0.08
 
 ```{r, Fig 2 Rep}
 #Figure 2 Replication
-pd <- position_dodge(0.1)
-ggplot() + 
-  geom_line(data = desc_stat, aes(x = dft_value, y = attractive_mean), color = "green") + 
-    geom_errorbar(aes(x = desc_stat$dft_value, 
-                      ymin = desc_stat$attractive_mean - desc_stat$attractive_sd/sqrt(528), 
-                      ymax = desc_stat$attractive_mean + desc_stat$attractive_sd/sqrt(528)), 
-                  width=.1, position = pd)  + 
-  geom_line(data = desc_stat, aes(x = dft_value, y = trust_mean), color = "blue") +
-  geom_errorbar(aes(x = desc_stat$dft_value, 
-                    ymin = desc_stat$trust_mean - desc_stat$trust_sd/sqrt(528), 
-                    ymax = desc_stat$trust_mean + desc_stat$trust_sd/sqrt(528)), width=.1,
-position = pd)  +  
+
+faces_tidy %>%
+  mutate(dft_value = as.numeric(as.character(dft_value))) %>%
+  group_by(trust_attract, dft_value) %>%
+  dplyr::summarise(mean = mean(value), sd = sd(value)) %>%
+  mutate(ci_lower = mean - sd/sqrt(48),
+         ci_upper = mean + sd/sqrt(48)) %>%
+  ggplot(., aes(x = dft_value, y=mean, col=trust_attract)) +
+  geom_smooth(aes(group=trust_attract), se=F) +
+  geom_linerange(aes(ymin = ci_lower, ymax = ci_upper)) +
   xlab('DFT Value') + 
   ylab('Mean Judgment') + 
-  ylim(0, 10) + 
+  scale_y_continuous(limits= c(0.5, 9.5), breaks=seq(0,10,1)) +
   scale_x_continuous(breaks=seq(0,100,10))
-
 ```
 
-Figure 2: Mean trustworthiness and attractiveness judgments as a function of DFT. Error bars represent within-subjects standard errors.
+Replicated Figure 2: Mean trustworthiness and attractiveness judgments as a function of DFT. Error bars represent within-subjects standard errors (computed by sd / number of participants).
+
+![Original Figure 2](figure2.png)
 
 
 ### Errors:
@@ -189,9 +186,9 @@ reportObject <- reproCheck(reportedValue = "37", obtainedValue = 46, valueType =
 
 ## Step 5: Conclusion
 
-In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT ( F(10, 37) = 4.05, p < .001, ηp2 = .52). The authors also found a significant interaction, F(10, 37) = 5.95, p < 0.001, ηp2 = 0.62
+In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT: F(10, 37) = 4.05, p < .001, ηp2 = .52. The authors also found a significant interaction, F(10, 37) = 5.95, p < 0.001, ηp2 = 0.62.
 
-Our attempt to calculate these same findings failed. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only inlcuded 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.
+Our attempt to calculate these same findings failed. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.
 
 We found nearly identical values in two different ANOVA models, both of which differed from the authors reported findings.
 
