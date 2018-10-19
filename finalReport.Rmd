@@ -57,6 +57,7 @@ library(plyr)
 library(corrplot)
 library(car)
 library(ez) #For ANOVA Models
+library(afex) #to run aov_ez
 ```
 
 ```{r}
@@ -120,7 +121,7 @@ print(desc_stat)
 ```{r, model 1}
 #Model 1 - Repeated Measures ANOVA 
 model1 <- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(subid / (dft_value))))
-print(summary(model1))
+model1_summary <- summary(model1)
 ```
 
 Our goal was to reproduce the analysis of the authors in experiemnt one. we conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.
@@ -143,6 +144,21 @@ print(model2)
 Because we found different outcomes above and we could not obtain all the values reported by the authors, here we try a slightly different model using a different R package.
 
 The main effect of DFT was significant, F(10, 46) = 10.49, p < .001, ηp2 = 0.082. There was also a significant interaction between DFT and Judgement Type  interaction, F(10, 460) = 43.75, p < .001, ηp2 = 0.27.
+
+### Model 3 (Added by co-pilot):
+
+```{r}
+model3 <- aov_ez(data = faces_prepr,
+       id = "subid",
+       between = "trust_attract",
+       dv = "avg_value",
+       within = c("dft_value"),
+       anova_table = list(correction = 'none', es = 'pes'))
+
+print(model3)
+```
+
+This model gives the same results as model1. The stats from model 3 will be used to compare against the original stats.
 
 ### Figure 2 Replication:
 
@@ -171,16 +187,37 @@ Replicated Figure 2: Mean trustworthiness and attractiveness judgments as a func
 
 ### Errors:
 
+
+
 ```{r}
+# Main effect of DFT:
 
 #ANOVA Output - Main Effect of DFT
-reportObject <- reproCheck(reportedValue = "4.05", obtainedValue = 10.50, valueType = 'F')
+reportObject <- reproCheck(reportedValue = "4.05", obtainedValue = model3$anova_table$F[2], valueType = 'F')
+
+#ANOVA Output - num df
+reportObject <- reproCheck(reportedValue = "10", obtainedValue = model3$anova_table$`num Df`[2], valueType = 'df')
+
+#ANOVA Output - den df
+reportObject <- reproCheck(reportedValue = "37", obtainedValue = model3$anova_table$`den Df`[2], valueType = 'df')
+
+#ANOVA Output - p value
+reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = model3$anova_table$`Pr(>F)`[2], valueType = 'p', eyeballCheck = TRUE)
+
+# Interaction:
 
 #ANOVA Output - Interaction Effect of DFT with Judgment Type
-reportObject <- reproCheck(reportedValue = "5.95", obtainedValue = 43.75, valueType = 'F')
+reportObject <- reproCheck(reportedValue = "5.95", obtainedValue = model3$anova_table$F[3], valueType = 'F')
 
-#ANOVA Output - F Test Degrees of Freedom 
-reportObject <- reproCheck(reportedValue = "37", obtainedValue = 46, valueType = 'df')
+#ANOVA Output - num df
+reportObject <- reproCheck(reportedValue = "10", obtainedValue = model3$anova_table$`num Df`[3], valueType = 'df')
+
+#ANOVA Output - den df
+reportObject <- reproCheck(reportedValue = "37", obtainedValue = model3$anova_table$`den Df`[3], valueType = 'df')
+
+#ANOVA Output - p value
+reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = model3$anova_table$`Pr(>F)`[3], valueType = 'p', eyeballCheck = TRUE)
+
 
 ```
 
@@ -188,7 +225,7 @@ reportObject <- reproCheck(reportedValue = "37", obtainedValue = 46, valueType =
 
 In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT: F(10, 37) = 4.05, p < .001, ηp2 = .52. The authors also found a significant interaction, F(10, 37) = 5.95, p < 0.001, ηp2 = 0.62.
 
-Our attempt to calculate these same findings failed. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.
+Our attempt to replicate the reported F-scores and Dfs failed, even though the general conclusion remained the same, in that the main effect and interaction remained significant below .001. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.
 
 We found nearly identical values in two different ANOVA models, both of which differed from the authors reported findings.
 
@@ -202,13 +239,13 @@ Insufficient_Information_Errors <- 0 # how many discrete insufficient informatio
 
 # Assess the causal locus (discrete reproducibility issues) of any reproducibility errors. Note that there doesn't necessarily have to be a one-to-one correspondance between discrete reproducibility issues and reproducibility errors. For example, it could be that the original article neglects to mention that a Greenhouse-Geisser correct was applied to ANOVA outcomes. This might result in multiple reproducibility errors, but there is a single causal locus (discrete reproducibility issue).
 
-locus_typo <- NA # how many discrete issues did you encounter that related to typographical errors?
-locus_specification <- NA # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
-locus_analysis <- NA # how many discrete issues did you encounter that related to errors in the authors' original analyses?
-locus_data <- NA # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
-locus_unidentified <- NA # how many discrete issues were there for which you could not identify the cause
+locus_typo <- 0 # how many discrete issues did you encounter that related to typographical errors?
+locus_specification <- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis <- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data <- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified <- 1 # how many discrete issues were there for which you could not identify the cause
 
-Affects_Conclusion <- NA # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
+Affects_Conclusion <- 0 # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
 ```
 
 ```{r}

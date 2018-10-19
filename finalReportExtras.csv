@@ -1,2 +1,2 @@
 articleID,pilotNames,copilotNames,pilotTTC,copilotTTC,pilotStartDate,copilotStartDate,completionDate,Author_Assistance,finalOutcome,Insufficient_Information_Errors,locus_typo,locus_specification,locus_analysis,locus_data,locus_unidentified
-4-1-2015_PS,"Sean Zion, Mufan Luo",Erica Yoon,500,120,2020-11-05,2020-10-19,NA,FALSE,Failure without author assistance,0,NA,NA,NA,NA,NA
+4-1-2015_PS,"Sean Zion, Mufan Luo",Erica Yoon,500,120,2020-11-05,2020-10-19,NA,FALSE,Failure without author assistance,0,0,0,0,0,1

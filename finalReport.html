@@ -254,7 +254,8 @@ library(psych)
 library(plyr)
 library(corrplot)
 library(car)
-library(ez) #For ANOVA Models</code></pre>
+library(ez) #For ANOVA Models
+library(afex) #to run aov_ez</code></pre>
 <pre class="r"><code># Prepare report object. This will be updated automatically by the reproCheck function each time values are compared.
 reportObject &lt;- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)</code></pre>
 </div>
@@ -320,20 +321,7 @@ print(desc_stat)</code></pre>
 <h3>Model 1:</h3>
 <pre class="r"><code>#Model 1 - Repeated Measures ANOVA 
 model1 &lt;- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(subid / (dft_value))))
-print(summary(model1))</code></pre>
-<pre><code>## 
-## Error: subid
-##               Df Sum Sq Mean Sq F value Pr(&gt;F)
-## trust_attract  1   28.5   28.50   2.428  0.126
-## Residuals     46  540.0   11.74               
-## 
-## Error: subid:dft_value
-##                          Df Sum Sq Mean Sq F value  Pr(&gt;F)    
-## dft_value                10   78.5    7.85   10.50 4.6e-16 ***
-## dft_value:trust_attract  10  327.1   32.71   43.75 &lt; 2e-16 ***
-## Residuals               460  343.9    0.75                    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+model1_summary &lt;- summary(model1)</code></pre>
 <p>Our goal was to reproduce the analysis of the authors in experiemnt one. we conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.</p>
 <p>The main effect of DFT was significant, F(10, 46) = 10.50, p &lt; .001. There was also a significant interaction between DFT and Judgement Type interaction, F(10, 460) = 43.75, p &lt; .001.</p>
 <p>ηp2 could not be caluculated with this model, but we will check this output and calculate ηp2 below.</p>
@@ -410,6 +398,27 @@ model2$ANOVA</code></pre>
 <p>Because we found different outcomes above and we could not obtain all the values reported by the authors, here we try a slightly different model using a different R package.</p>
 <p>The main effect of DFT was significant, F(10, 46) = 10.49, p &lt; .001, ηp2 = 0.082. There was also a significant interaction between DFT and Judgement Type interaction, F(10, 460) = 43.75, p &lt; .001, ηp2 = 0.27.</p>
 </div>
+<div id="model-3-added-by-co-pilot" class="section level3">
+<h3>Model 3 (Added by co-pilot):</h3>
+<pre class="r"><code>model3 &lt;- aov_ez(data = faces_prepr,
+       id = &quot;subid&quot;,
+       between = &quot;trust_attract&quot;,
+       dv = &quot;avg_value&quot;,
+       within = c(&quot;dft_value&quot;),
+       anova_table = list(correction = 'none', es = 'pes'))
+
+print(model3)</code></pre>
+<pre><code>## Anova Table (Type 3 tests)
+## 
+## Response: avg_value
+##                    Effect      df   MSE         F pes p.value
+## 1           trust_attract   1, 46 11.74      2.43 .05     .13
+## 2               dft_value 10, 460  0.75 10.50 *** .19  &lt;.0001
+## 3 trust_attract:dft_value 10, 460  0.75 43.75 *** .49  &lt;.0001
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '+' 0.1 ' ' 1</code></pre>
+<p>This model gives the same results as model1. The stats from model 3 will be used to compare against the original stats.</p>
+</div>
 <div id="figure-2-replication" class="section level3">
 <h3>Figure 2 Replication:</h3>
 <pre class="r"><code>#Figure 2 Replication
@@ -436,21 +445,40 @@ faces_tidy %&gt;%
 </div>
 <div id="errors" class="section level3">
 <h3>Errors:</h3>
-<pre class="r"><code>#ANOVA Output - Main Effect of DFT
-reportObject &lt;- reproCheck(reportedValue = &quot;4.05&quot;, obtainedValue = 10.50, valueType = 'F')</code></pre>
+<pre class="r"><code># Main effect of DFT:
+
+#ANOVA Output - Main Effect of DFT
+reportObject &lt;- reproCheck(reportedValue = &quot;4.05&quot;, obtainedValue = model3$anova_table$F[2], valueType = 'F')</code></pre>
 <pre><code>## [1] &quot;MAJOR_ERROR for F. The reported value (4.05) and the obtained value (10.5) differed by 159.26%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code>#ANOVA Output - Interaction Effect of DFT with Judgment Type
-reportObject &lt;- reproCheck(reportedValue = &quot;5.95&quot;, obtainedValue = 43.75, valueType = 'F')</code></pre>
+<pre class="r"><code>#ANOVA Output - num df
+reportObject &lt;- reproCheck(reportedValue = &quot;10&quot;, obtainedValue = model3$anova_table$`num Df`[2], valueType = 'df')</code></pre>
+<pre><code>## [1] &quot;MATCH for df. The reported value (10) and the obtained value (10) differed by 0%. NB obtained value was rounded to 0 decimal places.&quot;</code></pre>
+<pre class="r"><code>#ANOVA Output - den df
+reportObject &lt;- reproCheck(reportedValue = &quot;37&quot;, obtainedValue = model3$anova_table$`den Df`[2], valueType = 'df')</code></pre>
+<pre><code>## [1] &quot;MAJOR_ERROR for df. The reported value (37) and the obtained value (460) differed by 1143.24%. NB obtained value was rounded to 0 decimal places.&quot;</code></pre>
+<pre class="r"><code>#ANOVA Output - p value
+reportObject &lt;- reproCheck(reportedValue = &quot;&lt;.001&quot;, obtainedValue = model3$anova_table$`Pr(&gt;F)`[2], valueType = 'p', eyeballCheck = TRUE)</code></pre>
+<pre><code>## [1] &quot;MATCH for p. Eyeball comparison only.&quot;</code></pre>
+<pre class="r"><code># Interaction:
+
+#ANOVA Output - Interaction Effect of DFT with Judgment Type
+reportObject &lt;- reproCheck(reportedValue = &quot;5.95&quot;, obtainedValue = model3$anova_table$F[3], valueType = 'F')</code></pre>
 <pre><code>## [1] &quot;MAJOR_ERROR for F. The reported value (5.95) and the obtained value (43.75) differed by 635.29%. NB obtained value was rounded to 2 decimal places.&quot;</code></pre>
-<pre class="r"><code>#ANOVA Output - F Test Degrees of Freedom 
-reportObject &lt;- reproCheck(reportedValue = &quot;37&quot;, obtainedValue = 46, valueType = 'df')</code></pre>
-<pre><code>## [1] &quot;MAJOR_ERROR for df. The reported value (37) and the obtained value (46) differed by 24.32%. NB obtained value was rounded to 0 decimal places.&quot;</code></pre>
+<pre class="r"><code>#ANOVA Output - num df
+reportObject &lt;- reproCheck(reportedValue = &quot;10&quot;, obtainedValue = model3$anova_table$`num Df`[3], valueType = 'df')</code></pre>
+<pre><code>## [1] &quot;MATCH for df. The reported value (10) and the obtained value (10) differed by 0%. NB obtained value was rounded to 0 decimal places.&quot;</code></pre>
+<pre class="r"><code>#ANOVA Output - den df
+reportObject &lt;- reproCheck(reportedValue = &quot;37&quot;, obtainedValue = model3$anova_table$`den Df`[3], valueType = 'df')</code></pre>
+<pre><code>## [1] &quot;MAJOR_ERROR for df. The reported value (37) and the obtained value (460) differed by 1143.24%. NB obtained value was rounded to 0 decimal places.&quot;</code></pre>
+<pre class="r"><code>#ANOVA Output - p value
+reportObject &lt;- reproCheck(reportedValue = &quot;&lt;.001&quot;, obtainedValue = model3$anova_table$`Pr(&gt;F)`[3], valueType = 'p', eyeballCheck = TRUE)</code></pre>
+<pre><code>## [1] &quot;MATCH for p. Eyeball comparison only.&quot;</code></pre>
 </div>
 </div>
 <div id="step-5-conclusion" class="section level2">
 <h2>Step 5: Conclusion</h2>
 <p>In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT: F(10, 37) = 4.05, p &lt; .001, ηp2 = .52. The authors also found a significant interaction, F(10, 37) = 5.95, p &lt; 0.001, ηp2 = 0.62.</p>
-<p>Our attempt to calculate these same findings failed. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.</p>
+<p>Our attempt to replicate the reported F-scores and Dfs failed, even though the general conclusion remained the same, in that the main effect and interaction remained significant below .001. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.</p>
 <p>We found nearly identical values in two different ANOVA models, both of which differed from the authors reported findings.</p>
 <p>We were generally able to replicate the figure depicting mean trustworthiness and attractiveness judgments as a function of distance of the face from the typical face (DFT).</p>
 <pre class="r"><code>Author_Assistance = FALSE # was author assistance provided? (if so, enter TRUE)
@@ -459,13 +487,13 @@ Insufficient_Information_Errors &lt;- 0 # how many discrete insufficient informa
 
 # Assess the causal locus (discrete reproducibility issues) of any reproducibility errors. Note that there doesn't necessarily have to be a one-to-one correspondance between discrete reproducibility issues and reproducibility errors. For example, it could be that the original article neglects to mention that a Greenhouse-Geisser correct was applied to ANOVA outcomes. This might result in multiple reproducibility errors, but there is a single causal locus (discrete reproducibility issue).
 
-locus_typo &lt;- NA # how many discrete issues did you encounter that related to typographical errors?
-locus_specification &lt;- NA # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
-locus_analysis &lt;- NA # how many discrete issues did you encounter that related to errors in the authors' original analyses?
-locus_data &lt;- NA # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
-locus_unidentified &lt;- NA # how many discrete issues were there for which you could not identify the cause
+locus_typo &lt;- 0 # how many discrete issues did you encounter that related to typographical errors?
+locus_specification &lt;- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis &lt;- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data &lt;- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified &lt;- 1 # how many discrete issues were there for which you could not identify the cause
 
-Affects_Conclusion &lt;- NA # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.</code></pre>
+Affects_Conclusion &lt;- 0 # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.</code></pre>
 <pre class="r"><code>reportObject &lt;- reportObject %&gt;%
   filter(dummyRow == FALSE) %&gt;% # remove the dummy row
   select(-dummyRow) %&gt;% # remove dummy row designation
@@ -511,130 +539,177 @@ if(reportType == &quot;final&quot;){
 ##  tz       America/Los_Angeles         
 ##  date     2018-10-19                  
 ## 
-##  package      * version date      
-##  assertthat     0.2.0   2017-04-11
-##  backports      1.1.2   2017-12-13
-##  base         * 3.4.3   2017-12-07
-##  bindr          0.1     2016-11-13
-##  bindrcpp     * 0.2     2017-06-17
-##  broom          0.4.3   2017-11-20
-##  car          * 2.1-6   2017-11-19
-##  CARPSreports * 0.1     2018-06-13
-##  cellranger     1.1.0   2016-07-27
-##  cli            1.0.0   2017-11-05
-##  colorspace     1.3-2   2016-12-14
-##  compiler       3.4.3   2017-12-07
-##  corrplot     * 0.84    2017-10-16
-##  crayon         1.3.4   2017-09-16
-##  datasets     * 3.4.3   2017-12-07
-##  devtools       1.13.5  2018-02-18
-##  digest         0.6.12  2017-01-27
-##  dplyr        * 0.7.4   2017-09-28
-##  evaluate       0.10.1  2017-06-24
-##  ez           * 4.4-0   2016-11-02
-##  forcats      * 0.2.0   2017-01-23
-##  foreign        0.8-69  2017-06-22
-##  ggplot2      * 3.0.0   2018-07-03
-##  glue           1.2.0   2017-10-29
-##  graphics     * 3.4.3   2017-12-07
-##  grDevices    * 3.4.3   2017-12-07
-##  grid           3.4.3   2017-12-07
-##  gtable         0.2.0   2016-02-26
-##  haven        * 1.1.0   2017-07-09
-##  hms            0.4.0   2017-11-23
-##  htmltools      0.3.6   2017-04-28
-##  httr           1.3.1   2017-08-20
-##  jsonlite       1.5     2017-06-01
-##  knitr        * 1.20    2018-02-20
-##  lattice        0.20-35 2017-03-25
-##  lazyeval       0.2.1   2017-10-29
-##  lme4           1.1-15  2017-12-21
-##  lubridate      1.7.1   2017-11-03
-##  magrittr       1.5     2014-11-22
-##  MASS           7.3-47  2017-02-26
-##  Matrix         1.2-12  2017-11-20
-##  MatrixModels   0.4-1   2015-08-22
-##  memoise        1.1.0   2017-04-21
-##  methods      * 3.4.3   2017-12-07
-##  mgcv           1.8-22  2017-09-24
-##  minqa          1.2.4   2014-10-09
-##  mnormt         1.5-5   2016-10-15
-##  modelr         0.1.1   2017-07-24
-##  munsell        0.4.3   2016-02-13
-##  nlme           3.1-131 2017-02-06
-##  nloptr         1.0.4   2014-08-04
-##  nnet           7.3-12  2016-02-02
-##  parallel       3.4.3   2017-12-07
-##  pbkrtest       0.4-7   2017-03-15
-##  pillar         1.2.3   2018-05-25
-##  pkgconfig      2.0.1   2017-03-21
-##  plyr         * 1.8.4   2016-06-08
-##  psych        * 1.7.8   2017-09-09
-##  purrr        * 0.2.4   2017-10-18
-##  quantreg       5.34    2017-10-25
-##  R6             2.2.2   2017-06-17
-##  Rcpp           0.12.17 2018-05-18
-##  readr        * 1.1.1   2017-05-16
-##  readxl       * 1.1.0   2018-04-20
-##  reshape2       1.4.2   2016-10-22
-##  rlang          0.2.1   2018-05-30
-##  rmarkdown      1.8     2017-11-17
-##  rprojroot      1.2     2017-01-16
-##  rstudioapi     0.7     2017-09-07
-##  rvest          0.3.2   2016-06-17
-##  scales         0.5.0   2017-08-24
-##  SparseM        1.77    2017-04-23
-##  splines        3.4.3   2017-12-07
-##  stats        * 3.4.3   2017-12-07
-##  stringi        1.2.2   2018-05-02
-##  stringr      * 1.3.1   2018-05-10
-##  tibble       * 1.4.2   2018-01-22
-##  tidyr        * 0.7.2   2017-10-16
-##  tidyselect     0.2.3   2017-11-06
-##  tidyverse    * 1.2.1   2017-11-14
-##  tools          3.4.3   2017-12-07
-##  utf8           1.1.3   2018-01-03
-##  utils        * 3.4.3   2017-12-07
-##  withr          2.1.0   2017-11-01
-##  xml2           1.1.1   2017-01-24
-##  yaml           2.1.19  2018-05-01
+##  package      * version  date      
+##  acepack        1.4.1    2016-10-29
+##  afex         * 0.20-2   2018-04-04
+##  assertthat     0.2.0    2017-04-11
+##  backports      1.1.2    2017-12-13
+##  base         * 3.4.3    2017-12-07
+##  base64enc      0.1-3    2015-07-28
+##  bindr          0.1      2016-11-13
+##  bindrcpp     * 0.2      2017-06-17
+##  broom          0.4.3    2017-11-20
+##  car          * 2.1-6    2017-11-19
+##  CARPSreports * 0.1      2018-06-13
+##  cellranger     1.1.0    2016-07-27
+##  checkmate      1.8.5    2017-10-24
+##  cli            1.0.0    2017-11-05
+##  cluster        2.0.6    2017-03-10
+##  coda           0.19-1   2016-12-08
+##  codetools      0.2-15   2016-10-05
+##  coin           1.2-2    2017-11-28
+##  colorspace     1.3-2    2016-12-14
+##  compiler       3.4.3    2017-12-07
+##  corrplot     * 0.84     2017-10-16
+##  crayon         1.3.4    2017-09-16
+##  data.table     1.10.4-3 2017-10-27
+##  datasets     * 3.4.3    2017-12-07
+##  devtools       1.13.5   2018-02-18
+##  digest         0.6.12   2017-01-27
+##  dplyr        * 0.7.4    2017-09-28
+##  emmeans      * 1.2.1    2018-05-21
+##  estimability   1.3      2018-02-11
+##  evaluate       0.10.1   2017-06-24
+##  ez           * 4.4-0    2016-11-02
+##  forcats      * 0.2.0    2017-01-23
+##  foreign        0.8-69   2017-06-22
+##  Formula        1.2-2    2017-07-10
+##  ggplot2      * 3.0.0    2018-07-03
+##  glue           1.2.0    2017-10-29
+##  graphics     * 3.4.3    2017-12-07
+##  grDevices    * 3.4.3    2017-12-07
+##  grid           3.4.3    2017-12-07
+##  gridExtra      2.3      2017-09-09
+##  gtable         0.2.0    2016-02-26
+##  haven        * 1.1.0    2017-07-09
+##  Hmisc          4.0-3    2017-05-02
+##  hms            0.4.0    2017-11-23
+##  htmlTable      1.11.0   2017-12-01
+##  htmltools      0.3.6    2017-04-28
+##  htmlwidgets    0.9      2017-07-10
+##  httr           1.3.1    2017-08-20
+##  jsonlite       1.5      2017-06-01
+##  knitr        * 1.20     2018-02-20
+##  lattice        0.20-35  2017-03-25
+##  latticeExtra   0.6-28   2016-02-09
+##  lazyeval       0.2.1    2017-10-29
+##  lme4         * 1.1-15   2017-12-21
+##  lmerTest       2.0-36   2017-11-30
+##  lubridate      1.7.1    2017-11-03
+##  magrittr       1.5      2014-11-22
+##  MASS           7.3-47   2017-02-26
+##  Matrix       * 1.2-12   2017-11-20
+##  MatrixModels   0.4-1    2015-08-22
+##  memoise        1.1.0    2017-04-21
+##  methods      * 3.4.3    2017-12-07
+##  mgcv           1.8-22   2017-09-24
+##  minqa          1.2.4    2014-10-09
+##  mnormt         1.5-5    2016-10-15
+##  modelr         0.1.1    2017-07-24
+##  modeltools     0.2-21   2013-09-02
+##  multcomp       1.4-8    2017-11-08
+##  munsell        0.4.3    2016-02-13
+##  mvtnorm        1.0-6    2017-03-02
+##  nlme           3.1-131  2017-02-06
+##  nloptr         1.0.4    2014-08-04
+##  nnet           7.3-12   2016-02-02
+##  parallel       3.4.3    2017-12-07
+##  pbkrtest       0.4-7    2017-03-15
+##  pillar         1.2.3    2018-05-25
+##  pkgconfig      2.0.1    2017-03-21
+##  plyr         * 1.8.4    2016-06-08
+##  psych        * 1.7.8    2017-09-09
+##  purrr        * 0.2.4    2017-10-18
+##  quantreg       5.34     2017-10-25
+##  R6             2.2.2    2017-06-17
+##  RColorBrewer   1.1-2    2014-12-07
+##  Rcpp           0.12.17  2018-05-18
+##  readr        * 1.1.1    2017-05-16
+##  readxl       * 1.1.0    2018-04-20
+##  reshape2       1.4.2    2016-10-22
+##  rlang          0.2.1    2018-05-30
+##  rmarkdown      1.8      2017-11-17
+##  rpart          4.1-11   2017-03-13
+##  rprojroot      1.2      2017-01-16
+##  rstudioapi     0.7      2017-09-07
+##  rvest          0.3.2    2016-06-17
+##  sandwich       2.4-0    2017-07-26
+##  scales         0.5.0    2017-08-24
+##  SparseM        1.77     2017-04-23
+##  splines        3.4.3    2017-12-07
+##  stats        * 3.4.3    2017-12-07
+##  stats4         3.4.3    2017-12-07
+##  stringi        1.2.2    2018-05-02
+##  stringr      * 1.3.1    2018-05-10
+##  survival       2.41-3   2017-04-04
+##  TH.data        1.0-8    2017-01-23
+##  tibble       * 1.4.2    2018-01-22
+##  tidyr        * 0.7.2    2017-10-16
+##  tidyselect     0.2.3    2017-11-06
+##  tidyverse    * 1.2.1    2017-11-14
+##  tools          3.4.3    2017-12-07
+##  utf8           1.1.3    2018-01-03
+##  utils        * 3.4.3    2017-12-07
+##  withr          2.1.0    2017-11-01
+##  xml2           1.1.1    2017-01-24
+##  xtable         1.8-2    2016-02-05
+##  yaml           2.1.19   2018-05-01
+##  zoo            1.8-1    2018-01-08
 ##  source                                     
+##  cran (@1.4.1)                              
+##  CRAN (R 3.4.4)                             
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.1.2)                              
 ##  local                                      
+##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.3)                             
 ##  Github (METRICS-CARPS/CARPSreports@95b6979)
 ##  CRAN (R 3.4.0)                             
+##  cran (@1.8.5)                              
 ##  CRAN (R 3.4.2)                             
+##  CRAN (R 3.4.3)                             
+##  CRAN (R 3.4.0)                             
+##  CRAN (R 3.4.3)                             
+##  CRAN (R 3.4.3)                             
 ##  cran (@1.3-2)                              
 ##  local                                      
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.1)                             
+##  cran (@1.10.4-)                            
 ##  local                                      
 ##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.2)                             
+##  CRAN (R 3.4.4)                             
+##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.1)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.3)                             
+##  cran (@1.2-2)                              
 ##  CRAN (R 3.4.4)                             
 ##  CRAN (R 3.4.2)                             
 ##  local                                      
 ##  local                                      
 ##  local                                      
+##  CRAN (R 3.4.1)                             
 ##  cran (@0.2.0)                              
 ##  CRAN (R 3.4.1)                             
+##  cran (@4.0-3)                              
 ##  CRAN (R 3.4.3)                             
+##  cran (@1.11.0)                             
 ##  CRAN (R 3.4.0)                             
+##  cran (@0.9)                                
 ##  CRAN (R 3.4.1)                             
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.20)                               
 ##  CRAN (R 3.4.3)                             
+##  cran (@0.6-28)                             
 ##  cran (@0.2.1)                              
+##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.0)                             
@@ -647,7 +722,10 @@ if(reportType == &quot;final&quot;){
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.1)                             
+##  CRAN (R 3.4.0)                             
+##  CRAN (R 3.4.2)                             
 ##  cran (@0.4.3)                              
+##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.3)                             
@@ -660,21 +738,27 @@ if(reportType == &quot;final&quot;){
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.0)                             
+##  CRAN (R 3.4.0)                             
 ##  cran (@0.12.17)                            
 ##  CRAN (R 3.4.0)                             
 ##  cran (@1.1.0)                              
 ##  cran (@1.4.2)                              
 ##  cran (@0.2.1)                              
 ##  CRAN (R 3.4.2)                             
+##  CRAN (R 3.4.3)                             
 ##  CRAN (R 3.4.0)                             
 ##  CRAN (R 3.4.1)                             
 ##  CRAN (R 3.4.0)                             
+##  CRAN (R 3.4.1)                             
 ##  cran (@0.5.0)                              
 ##  CRAN (R 3.4.0)                             
 ##  local                                      
 ##  local                                      
+##  local                                      
 ##  cran (@1.2.2)                              
 ##  cran (@1.3.1)                              
+##  CRAN (R 3.4.3)                             
+##  CRAN (R 3.4.0)                             
 ##  cran (@1.4.2)                              
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.2)                             
@@ -684,7 +768,9 @@ if(reportType == &quot;final&quot;){
 ##  local                                      
 ##  CRAN (R 3.4.2)                             
 ##  CRAN (R 3.4.0)                             
-##  cran (@2.1.19)</code></pre>
+##  cran (@1.8-2)                              
+##  cran (@2.1.19)                             
+##  CRAN (R 3.4.3)</code></pre>
 </div>
 
 
