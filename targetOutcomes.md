@@ -15,5 +15,7 @@ DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52.
 More important, this main effect was qualified by a significant
 interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 
+> Fig. 2
+
 **Note**
 Make sure to use the original article for additional context and information about any necessary pre-processing steps. Also check for additional supplementary materials that may provide supporting documentation for analysis procedures.

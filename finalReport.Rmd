@@ -37,6 +37,7 @@ DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52.
 More important, this main effect was qualified by a significant
 interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 
+> Fig.2
 ------
 
 ```{r global_options, include=FALSE}
@@ -116,6 +117,7 @@ print(desc_stat)
 
 ### Inferential statistics
 
+> by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 ### Model 1:
 
 ```{r, model 1}
@@ -124,12 +126,7 @@ model1 <- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(
 model1_summary <- summary(model1)
 ```
 
-Our goal was to reproduce the analysis of the authors in experiemnt one. we conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.
-
-The main effect of DFT was significant, F(10, 46) = 10.50, p < .001. There was also a significant interaction between DFT and Judgement Type  interaction, F(10, 460) = 43.75, p < .001.
-
-ηp2 could not be caluculated with this model, but we will check this output and calculate ηp2 below. 
-
+Our goal was to reproduce the analysis of the authors in experiment one. We conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.
 
 ### Model 2: 
 
@@ -143,7 +140,6 @@ print(model2)
 
 Because we found different outcomes above and we could not obtain all the values reported by the authors, here we try a slightly different model using a different R package.
 
-The main effect of DFT was significant, F(10, 46) = 10.49, p < .001, ηp2 = 0.082. There was also a significant interaction between DFT and Judgement Type  interaction, F(10, 460) = 43.75, p < .001, ηp2 = 0.27.
 
 ### Model 3 (Added by co-pilot):
 
