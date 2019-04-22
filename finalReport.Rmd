@@ -12,7 +12,7 @@ reportType <- 'final'
 pilotNames <- "Sean Zion, Mufan Luo" # insert the pilot's name here e.g., "Tom Hardwicke". If there are multiple pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
 copilotNames <- "Erica Yoon" # insert the co-pilot's name here e.g., "Michael Frank". If there are multiple co-pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
 pilotTTC <- 500 # insert the pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
-copilotTTC <- 120 # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+copilotTTC <- 160 # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
 pilotStartDate <- as.Date("11/5/2017", format = "%m/%d/%y") # insert the pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 copilotStartDate <- as.Date("10/19/2018", format = "%m/%d/%y") # insert the co-pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 completionDate <- as.Date("", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
@@ -27,15 +27,7 @@ The authors conducted a repeated measures ANOVA using DFT as a repeated measure 
 ------
 
 #### Target outcomes: 
-> We complemented our by-face analysis with a by-participant
-repeated measures analysis of variance
-(ANOVA) with DFT as a repeated measure and judgment
-type (trustworthiness vs. attractiveness) as a between-subjects
-factor. The observed effects supported the same
-conclusions as the by-face analysis. The main effect of
-DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52.
-More important, this main effect was qualified by a significant
-interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
+> We complemented our by-face analysis with a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 
 > Fig.2
 ------
@@ -54,7 +46,6 @@ library(readxl) # import excel files
 library(CARPSreports) # custom report functions
 library(ggplot2)
 library(psych)
-library(plyr)
 library(corrplot)
 library(car)
 library(ez) #For ANOVA Models
@@ -87,6 +78,7 @@ faces_tidy <- faces %>%
   select(-dft, -Trust1Attrc0)
 ```
 
+
 ## Step 4: Run analysis
 
 ### Pre-processing
@@ -115,47 +107,6 @@ desc_stat <- faces_tidy %>%
 print(desc_stat)
 ```
 
-### Inferential statistics
-
-> by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
-### Model 1:
-
-```{r, model 1}
-#Model 1 - Repeated Measures ANOVA 
-model1 <- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(subid / (dft_value))))
-model1_summary <- summary(model1)
-```
-
-Our goal was to reproduce the analysis of the authors in experiment one. We conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor.
-
-### Model 2: 
-
-```{r, mod 2}
-#Model 2 - Repeated Measures ANOVA
-model2 <- ezANOVA(data = faces_prepr, dv = .(avg_value), wid = .(subid), within = .(dft_value), between = .(trust_attract), detailed = TRUE, return_aov=T)
-
-model2$ANOVA
-print(model2)
-```
-
-Because we found different outcomes above and we could not obtain all the values reported by the authors, here we try a slightly different model using a different R package.
-
-
-### Model 3 (Added by co-pilot):
-
-```{r}
-model3 <- aov_ez(data = faces_prepr,
-       id = "subid",
-       between = "trust_attract",
-       dv = "avg_value",
-       within = c("dft_value"),
-       anova_table = list(correction = 'none', es = 'pes'))
-
-print(model3)
-```
-
-This model gives the same results as model1. The stats from model 3 will be used to compare against the original stats.
-
 ### Figure 2 Replication:
 
 ```{r, Fig 2 Rep}
@@ -181,9 +132,47 @@ Replicated Figure 2: Mean trustworthiness and attractiveness judgments as a func
 ![Original Figure 2](figure2.png)
 
 
-### Errors:
+### Inferential statistics
+
+> by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
+
+Our goal was to reproduce the analysis of the authors in experiment one. We conducted a by-participant repeated measures analysis of variance using the value of DFT as a repeated measure and judgment type (either trustworthiness or attractiveness) as a between-subjects factor. We tried several different ways of specifying the analysis.
+
+### Model 1:
+
+```{r, model 1}
+#Model 1 - Repeated Measures ANOVA 
+model1 <- with(faces_prepr, aov(avg_value ~ (dft_value * trust_attract) + Error(subid / (dft_value))))
+model1_summary <- summary(model1)
+model1_summary 
+```
+
+### Model 2: 
+
+```{r, mod 2}
+#Model 2 - Repeated Measures ANOVA
+model2 <- ezANOVA(data = faces_prepr, dv = .(avg_value), wid = .(subid), within = .(dft_value), between = .(trust_attract), detailed = TRUE, return_aov=T)
+
+model2$ANOVA
+```
 
 
+### Model 3 (Added by co-pilot):
+
+```{r}
+model3 <- aov_ez(data = faces_prepr,
+       id = "subid",
+       between = "trust_attract",
+       dv = "avg_value",
+       within = c("dft_value"),
+       anova_table = list(correction = 'none', es = 'pes'))
+
+print(model3)
+```
+
+All models concur with each other but don't match the reported outcomes.
+
+### Recording differences
 
 ```{r}
 # Main effect of DFT:
@@ -213,19 +202,21 @@ reportObject <- reproCheck(reportedValue = "37", obtainedValue = model3$anova_ta
 
 #ANOVA Output - p value
 reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = model3$anova_table$`Pr(>F)`[3], valueType = 'p', eyeballCheck = TRUE)
+```
 
+```{r}
+# TOM SANITY CHECK- CONCURS WITH PREVIOUS EFFORTS
+faces_forAOV <- faces_tidy %>% mutate(subid = as.factor(subid), dft_value = as.factor(dft_value)) %>% group_by(subid, dft_value, trust_attract) %>% summarize(avg = mean(value)) 
 
+thisAov <- aov(avg ~ trust_attract*dft_value + Error(subid/dft_value), data=faces_forAOV)
+summary(thisAov)
 ```
 
 ## Step 5: Conclusion
 
 In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT: F(10, 37) = 4.05, p < .001, ηp2 = .52. The authors also found a significant interaction, F(10, 37) = 5.95, p < 0.001, ηp2 = 0.62.
 
-Our attempt to replicate the reported F-scores and Dfs failed, even though the general conclusion remained the same, in that the main effect and interaction remained significant below .001. We believe this could be due to confusion over the number of subjects included. As reported above, it looks as though the authors only included 38 of the 48 subjects, indicated by a DF=37, or this was a typo in the manuscript. If certain participants were excluded from the analysis, it was not indicated other than the above DF error.
-
-We found nearly identical values in two different ANOVA models, both of which differed from the authors reported findings.
-
-We were generally able to replicate the figure depicting mean trustworthiness and attractiveness judgments as a function of distance of the face from the typical face (DFT).
+Our attempt to replicate the reported F-scores and Dfs failed, even though the general conclusion remained the same, in that the main effect and interaction remained significant below .001. Because the dfs are different - it must be that we are specifying the ANOVA differently to the original ANOVA, or the analysis is being performed on different data. We will check with the original authors.
 
 
 ```{r}
