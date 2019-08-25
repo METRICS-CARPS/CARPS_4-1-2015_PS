@@ -10,12 +10,12 @@ output:
 articleID <- "4-1-2015_PS" # insert the article ID code here e.g., "10-3-2015_PS"
 reportType <- 'final'
 pilotNames <- "Sean Zion, Mufan Luo" # insert the pilot's name here e.g., "Tom Hardwicke". If there are multiple pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
-copilotNames <- "Erica Yoon" # insert the co-pilot's name here e.g., "Michael Frank". If there are multiple co-pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
+copilotNames <- "Erica Yoon, Tom Hardwicke" # insert the co-pilot's name here e.g., "Michael Frank". If there are multiple co-pilots enter both names in a character string e.g., "Tom Hardwicke, Bob Dylan"
 pilotTTC <- 500 # insert the pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
-copilotTTC <- 160 # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+copilotTTC <- 220 # insert the co- pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
 pilotStartDate <- as.Date("11/5/2017", format = "%m/%d/%y") # insert the pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 copilotStartDate <- as.Date("10/19/2018", format = "%m/%d/%y") # insert the co-pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
-completionDate <- as.Date("", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+completionDate <- as.Date("06/12/2019", format = "%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
 ```
 
 -------
@@ -30,6 +30,7 @@ The authors conducted a repeated measures ANOVA using DFT as a repeated measure 
 > We complemented our by-face analysis with a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
 
 > Fig.2
+
 ------
 
 ```{r global_options, include=FALSE}
@@ -131,7 +132,6 @@ Replicated Figure 2: Mean trustworthiness and attractiveness judgments as a func
 
 ![Original Figure 2](figure2.png)
 
-
 ### Inferential statistics
 
 > by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. The observed effects supported the same conclusions as the by-face analysis. The main effect of DFT was significant, F(10, 37) = 4.05, p < .001, ηp2 = .52. More important, this main effect was qualified by a significant interaction, F(10, 37) = 5.95, p < .001, ηp2 = .62.
@@ -170,57 +170,77 @@ model3 <- aov_ez(data = faces_prepr,
 print(model3)
 ```
 
-All models concur with each other but don't match the reported outcomes.
-
-### Recording differences
-
 ```{r}
-# Main effect of DFT:
-
-#ANOVA Output - Main Effect of DFT
-reportObject <- reproCheck(reportedValue = "4.05", obtainedValue = model3$anova_table$F[2], valueType = 'F')
-
-#ANOVA Output - num df
-reportObject <- reproCheck(reportedValue = "10", obtainedValue = model3$anova_table$`num Df`[2], valueType = 'df')
-
-#ANOVA Output - den df
-reportObject <- reproCheck(reportedValue = "37", obtainedValue = model3$anova_table$`den Df`[2], valueType = 'df')
-
-#ANOVA Output - p value
-reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = model3$anova_table$`Pr(>F)`[2], valueType = 'p', eyeballCheck = TRUE)
-
-# Interaction:
-
-#ANOVA Output - Interaction Effect of DFT with Judgment Type
-reportObject <- reproCheck(reportedValue = "5.95", obtainedValue = model3$anova_table$F[3], valueType = 'F')
-
-#ANOVA Output - num df
-reportObject <- reproCheck(reportedValue = "10", obtainedValue = model3$anova_table$`num Df`[3], valueType = 'df')
-
-#ANOVA Output - den df
-reportObject <- reproCheck(reportedValue = "37", obtainedValue = model3$anova_table$`den Df`[3], valueType = 'df')
-
-#ANOVA Output - p value
-reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = model3$anova_table$`Pr(>F)`[3], valueType = 'p', eyeballCheck = TRUE)
-```
-
-```{r}
-# TOM SANITY CHECK- CONCURS WITH PREVIOUS EFFORTS
+# TOM SANITY CHECK - CONCURS WITH OUR PREVIOUS EFFORTS
 faces_forAOV <- faces_tidy %>% mutate(subid = as.factor(subid), dft_value = as.factor(dft_value)) %>% group_by(subid, dft_value, trust_attract) %>% summarize(avg = mean(value)) 
 
 thisAov <- aov(avg ~ trust_attract*dft_value + Error(subid/dft_value), data=faces_forAOV)
 summary(thisAov)
 ```
 
-## Step 5: Conclusion
+All models concur with each other but don't match the reported outcomes.
 
-In conclusion, we attempted to replicate a main finding from the Sofer et al., paper. The authors conducted a by-participant repeated measures analysis of variance (ANOVA) with DFT as a repeated measure and judgment type (trustworthiness vs. attractiveness) as a between-subjects factor. They report a significant main effect of DFT: F(10, 37) = 4.05, p < .001, ηp2 = .52. The authors also found a significant interaction, F(10, 37) = 5.95, p < 0.001, ηp2 = 0.62.
+At this stage we contacted the original authors for assistance. They correctly pointed out that we had missed an important footnote (footnote 2) which read: The sphericity assumption for this analysis and the corresponding analysis in Experiments 2 and 3 was not met. We report multivariate test results, as recommended by Maxwell and Delaney (2004), because these tests are more optimal than correcting for sphericity. The pattern of results did not differ depending on whether we used either a multivariate test or sphericity correction." They also sent SPSS syntax and a screenshot of the output - which demonstrates successful reproduction of the target outcomes (see below):
 
-Our attempt to replicate the reported F-scores and Dfs failed, even though the general conclusion remained the same, in that the main effect and interaction remained significant below .001. Because the dfs are different - it must be that we are specifying the ANOVA differently to the original ANOVA, or the analysis is being performed on different data. We will check with the original authors.
+GLM DFT_100 DFT_90 DFT_80 DFT_70 DFT_60 DFT_50 DFT_40 DFT_30 DFT_20 DFT_10 DFT_00 BY Trust1Attrc0
+/WSFACTOR=factor1 11 Polynomial
+/METHOD=SSTYPE(3)
+/PRINT=ETASQ
+/CRITERIA=ALPHA(.05)
+/WSDESIGN=factor1
+/DESIGN=Trust1Attrc0.
 
+![](screenshot.png)
+
+Unfortunately at this time our team does not have access to SPSS nor the expertise to implement these multivariate tests in R - the analysis appears to beyond our operational definition of a 'reasonably straightforward analysis'. We have decided to classify this case as a 'reproducible with author assistance' - but it should be noted that we have not verified this in an independent analysis.
+
+### Recording differences
 
 ```{r}
-Author_Assistance = FALSE # was author assistance provided? (if so, enter TRUE)
+# Main effect of DFT:
+
+#Output - Main Effect of DFT
+reportObject <- reproCheck(reportedValue = "4.05", obtainedValue = 4.06, valueType = 'F')
+
+#Output - num df
+reportObject <- reproCheck(reportedValue = "10", obtainedValue = 10, valueType = 'df')
+
+#Output - den df
+reportObject <- reproCheck(reportedValue = "37", obtainedValue = 37, valueType = 'df')
+
+#Output - p value
+reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = "<.001", valueType = 'p', eyeballCheck = TRUE)
+
+#Output - pes value
+reportObject <- reproCheck(reportedValue = ".52", obtainedValue = .523, valueType = 'pes')
+
+
+# Interaction:
+
+#Output - Interaction Effect of DFT with Judgment Type
+reportObject <- reproCheck(reportedValue = "5.95", obtainedValue = 5.95, valueType = 'F')
+
+#Output - num df
+reportObject <- reproCheck(reportedValue = "10", obtainedValue = 10, valueType = 'df')
+
+#Output - den df
+reportObject <- reproCheck(reportedValue = "37", obtainedValue = 37, valueType = 'df')
+
+#Output - p value
+reportObject <- reproCheck(reportedValue = "<.001", obtainedValue = "<.001", valueType = 'p', eyeballCheck = TRUE)
+
+#Output - pes value
+reportObject <- reproCheck(reportedValue = ".62", obtainedValue = .617, valueType = 'pes')
+```
+
+## Step 5: Conclusion
+
+We initially could not reproduce some degrees of freedom and F-values despite trying multiple different model specifications. We contacted the authors for assistance and recieved a reply. They correctly pointed out that we had missed an important footnote (footnote 2) which read: "The sphericity assumption for this analysis and the corresponding analysis in Experiments 2 and 3 was not met. We report multivariate test results, as recommended by Maxwell and Delaney (2004), because these tests are more optimal than correcting for sphericity. The pattern of results did not differ depending on whether we used either a multivariate test or sphericity correction." They also sent SPSS syntax and a screenshot of the output - which demonstrated successful reproduction of the target outcomes.
+
+Unfortunately at this time our team does not have access to SPSS nor the expertise to implement these multivariate tests in R - the analysis appears to be beyond our operational definition of a 'reasonably straightforward analysis'. We have decided to classify this case as a 'reproducible with author assistance' - but it should be noted that we have not verified this in an independent analysis.
+
+```{r}
+Author_Assistance = TRUE # was author assistance provided? (if so, enter TRUE)
 
 Insufficient_Information_Errors <- 0 # how many discrete insufficient information issues did you encounter?
 
@@ -232,7 +252,14 @@ locus_analysis <- 0 # how many discrete issues did you encounter that related to
 locus_data <- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
 locus_unidentified <- 1 # how many discrete issues were there for which you could not identify the cause
 
-Affects_Conclusion <- 0 # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
+# How many of the above issues were resolved through author assistance?
+locus_typo_resolved <- 0 # how many discrete issues did you encounter that related to typographical errors?
+locus_specification_resolved <- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis_resolved <- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data_resolved <- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified_resolved <- 1 # how many discrete issues were there for which you could not identify the cause
+
+Affects_Conclusion <- FALSE # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
 ```
 
 ```{r}
@@ -243,7 +270,7 @@ reportObject <- reportObject %>%
   select(articleID, everything()) # make articleID first column
 
 # decide on final outcome
-if(any(reportObject$comparisonOutcome != "MATCH") | Insufficient_Information_Errors > 0){
+if(any(reportObject$comparisonOutcome %in% c("MAJOR_ERROR", "DECISION_ERROR")) | Insufficient_Information_Errors > 0){
   finalOutcome <- "Failure without author assistance"
   if(Author_Assistance == T){
     finalOutcome <- "Failure despite author assistance"
@@ -256,7 +283,7 @@ if(any(reportObject$comparisonOutcome != "MATCH") | Insufficient_Information_Err
 }
 
 # collate report extra details
-reportExtras <- data.frame(articleID, pilotNames, copilotNames, pilotTTC, copilotTTC, pilotStartDate, copilotStartDate, completionDate, Author_Assistance, finalOutcome, Insufficient_Information_Errors, locus_typo, locus_specification, locus_analysis, locus_data, locus_unidentified)
+reportExtras <- data.frame(articleID, pilotNames, copilotNames, pilotTTC, copilotTTC, pilotStartDate, copilotStartDate, completionDate, Author_Assistance, finalOutcome, Insufficient_Information_Errors, locus_typo, locus_specification, locus_analysis, locus_data, locus_unidentified, locus_typo_resolved, locus_specification_resolved, locus_analysis_resolved, locus_data_resolved, locus_unidentified_resolved)
 
 # save report objects
 if(reportType == "pilot"){
@@ -270,7 +297,7 @@ if(reportType == "final"){
 }
 ```
 
-# Session information
+## Session information
 
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 devtools::session_info()
