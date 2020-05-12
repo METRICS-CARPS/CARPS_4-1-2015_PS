@@ -1,4 +1,0 @@
-articleID,reportedValue,obtainedValue,valueType,percentageError,comparisonOutcome,eyeballCheck
-4-1-2015_PS,4.05,10.5,F,159.25925925925927,MAJOR_ERROR,NA
-4-1-2015_PS,5.95,43.75,F,635.2941176470588,MAJOR_ERROR,NA
-4-1-2015_PS,37,46,df,24.324324324324326,MAJOR_ERROR,NA
